@@ -1,4 +1,4 @@
-# app.py (最終修正版: キャッシュのバグを修正)
+# app.py (最終確定版: UnhashableParamError 対策)
 import streamlit as st
 import io
 from PIL import Image
@@ -13,19 +13,19 @@ except Exception:
     st.info("Streamlit Community CloudのSecretsにキーを設定してください。")
     st.stop()
 
-# --- @st.cache_resource: AIモデルを一度だけ初期化し、リソースとして記憶し続ける ---
+# --- @st.cache_resource: AIモデル(機械)を一度だけ準備し、部屋に保管する ---
 @st.cache_resource
 def init_model():
-    return genai.GenerativeModel('gemini-2.0-fiash')
+    return genai.GenerativeModel('gemini-2.0-flash')
 
-# --- @st.cache_data: 同じ画像・プロンプトの解析結果をデータとしてキャッシュする ---
-# 【修正点】引数名の先頭のアンダースコアを削除。
-# これにより、キャッシュは画像データ(image_bytes)の変更を正しく認識するようになります。
+# --- @st.cache_data: 解析結果(データ)をファイリングする ---
+# 【修正点】引数から model を削除。ファイリング係は依頼書(画像+プロンプト)だけを見る。
 @st.cache_data
-def get_gemini_response(model, image_bytes, prompt):
+def get_gemini_response(image_bytes, prompt):
+    # 部屋に保管されている機械(AIモデル)をここから呼び出して使う
+    model = init_model()
     image = Image.open(io.BytesIO(image_bytes))
     try:
-        # 引数名が変わったので、ここも model を使うように修正
         response = model.generate_content([prompt, image])
         return response.text.strip()
     except Exception as e:
@@ -50,22 +50,20 @@ st.set_page_config(page_title="Moji Scan", layout="centered")
 st.title("📝 Moji Scan")
 st.markdown("手書き文字の画像をアップロードすると、AIがテキストに書き起こします。")
 
-# キャッシュされたモデルを取得
-model = init_model()
-
 uploaded_file = st.file_uploader(
     "画像ファイルを選択してください",
     type=["png", "jpg", "jpeg"]
 )
 
-if uploaded_file is not None:
+if uploaded_file is not model:
     image_bytes = uploaded_file.getvalue()
     st.image(image_bytes, caption="アップロードされた画像", use_column_width=True)
 
     with st.spinner("AIが手書き文字を解析中です..."):
         st.info("ステップ1/2: 異なる方法で文字を解析しています...")
-        response1 = get_gemini_response(model, image_bytes, PROMPT_BASE)
-        response2 = get_gemini_response(model, image_bytes, PROMPT_VARIANT)
+        # 【修正点】model を渡さない
+        response1 = get_gemini_response(image_bytes, PROMPT_BASE)
+        response2 = get_gemini_response(image_bytes, PROMPT_VARIANT)
 
         if response1 is None or response2 is None:
             st.error("解析を中断しました。時間をおいて再度お試しください。")
@@ -76,7 +74,8 @@ if uploaded_file is not None:
         else:
             st.info("ステップ2/2: 結果の精度を高めるため、追加の検証を行っています...")
             final_prompt = FINAL_JUDGEMENT_PROMPT.format(text1=response1, text2=response2)
-            final_result = get_gemini_response(model, image_bytes, final_prompt)
+            # 【修正点】model を渡さない
+            final_result = get_gemini_response(image_bytes, final_prompt)
 
             if final_result is None:
                 st.error("最終検証に失敗しました。最初の解析結果を表示します。")
