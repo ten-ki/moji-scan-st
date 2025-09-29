@@ -17,7 +17,7 @@ except Exception:
 # これが現在の正しい方法です。スリープからの復帰時にモデルを再読み込みせず、クラッシュを防ぎます。
 @st.cache_resource
 def init_model():
-    return genai.GenerativeModel('gemini-pro-vision')
+    return genai.GenerativeModel('gemini-2.0-flash')
 
 # --- @st.cache_data: 同じ画像・プロンプトの解析結果をデータとしてキャッシュする ---
 @st.cache_data
