@@ -1,4 +1,4 @@
-# app.py (最終確定版: UnhashableParamError 対策)
+# app.py (最終確定・修正版: NameError 対策)
 import streamlit as st
 import io
 from PIL import Image
@@ -13,17 +13,15 @@ except Exception:
     st.info("Streamlit Community CloudのSecretsにキーを設定してください。")
     st.stop()
 
-# --- @st.cache_resource: AIモデル(機械)を一度だけ準備し、部屋に保管する ---
+# --- @st.cache_resource: AIモデルを一度だけ準備し、リソースとして記憶する ---
 @st.cache_resource
 def init_model():
     return genai.GenerativeModel('gemini-2.0-flash')
 
-# --- @st.cache_data: 解析結果(データ)をファイリングする ---
-# 【修正点】引数から model を削除。ファイリング係は依頼書(画像+プロンプト)だけを見る。
+# --- @st.cache_data: 解析結果をデータとしてキャッシュする ---
 @st.cache_data
 def get_gemini_response(image_bytes, prompt):
-    # 部屋に保管されている機械(AIモデル)をここから呼び出して使う
-    model = init_model()
+    model = init_model() # ここでキャッシュされたモデルを呼び出す
     image = Image.open(io.BytesIO(image_bytes))
     try:
         response = model.generate_content([prompt, image])
@@ -55,13 +53,13 @@ uploaded_file = st.file_uploader(
     type=["png", "jpg", "jpeg"]
 )
 
-if uploaded_file is not model:
+# 【修正点】誤っていた 'if uploaded_file is not model:' を正しい条件に修正
+if uploaded_file is not None:
     image_bytes = uploaded_file.getvalue()
     st.image(image_bytes, caption="アップロードされた画像", use_column_width=True)
 
     with st.spinner("AIが手書き文字を解析中です..."):
         st.info("ステップ1/2: 異なる方法で文字を解析しています...")
-        # 【修正点】model を渡さない
         response1 = get_gemini_response(image_bytes, PROMPT_BASE)
         response2 = get_gemini_response(image_bytes, PROMPT_VARIANT)
 
@@ -74,7 +72,6 @@ if uploaded_file is not model:
         else:
             st.info("ステップ2/2: 結果の精度を高めるため、追加の検証を行っています...")
             final_prompt = FINAL_JUDGEMENT_PROMPT.format(text1=response1, text2=response2)
-            # 【修正点】model を渡さない
             final_result = get_gemini_response(image_bytes, final_prompt)
 
             if final_result is None:
