@@ -1,4 +1,4 @@
-# app.py (最終・根本対策版: @st.cache_resource 使用)
+# app.py (最終修正版: キャッシュのバグを修正)
 import streamlit as st
 import io
 from PIL import Image
@@ -14,17 +14,19 @@ except Exception:
     st.stop()
 
 # --- @st.cache_resource: AIモデルを一度だけ初期化し、リソースとして記憶し続ける ---
-# これが現在の正しい方法です。スリープからの復帰時にモデルを再読み込みせず、クラッシュを防ぎます。
 @st.cache_resource
 def init_model():
-    return genai.GenerativeModel('gemini-2.0-flash')
+    return genai.GenerativeModel('gemini-2.0-fiash')
 
 # --- @st.cache_data: 同じ画像・プロンプトの解析結果をデータとしてキャッシュする ---
+# 【修正点】引数名の先頭のアンダースコアを削除。
+# これにより、キャッシュは画像データ(image_bytes)の変更を正しく認識するようになります。
 @st.cache_data
-def get_gemini_response(_model, _image_bytes, prompt):
-    image = Image.open(io.BytesIO(_image_bytes))
+def get_gemini_response(model, image_bytes, prompt):
+    image = Image.open(io.BytesIO(image_bytes))
     try:
-        response = _model.generate_content([prompt, image])
+        # 引数名が変わったので、ここも model を使うように修正
+        response = model.generate_content([prompt, image])
         return response.text.strip()
     except Exception as e:
         st.error(f"AIとの通信中にエラーが発生しました: {e}")
