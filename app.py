@@ -1,4 +1,4 @@
-# app.py (最終安定版: @st.singleton導入)
+# app.py (最終・根本対策版: @st.cache_resource 使用)
 import streamlit as st
 import io
 from PIL import Image
@@ -6,7 +6,6 @@ import google.generativeai as genai
 
 # --- APIキーの設定 ---
 try:
-    # この部分はアプリ起動時に一度だけ実行される
     API_KEY = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=API_KEY)
 except Exception:
@@ -14,13 +13,13 @@ except Exception:
     st.info("Streamlit Community CloudのSecretsにキーを設定してください。")
     st.stop()
 
-# --- @st.singleton: AIモデルを一度だけ初期化し、記憶し続ける ---
-# これにより、スリープからの復帰時にモデルを再読み込みする必要がなくなり、クラッシュを防ぎます。
-@st.singleton
+# --- @st.cache_resource: AIモデルを一度だけ初期化し、リソースとして記憶し続ける ---
+# これが現在の正しい方法です。スリープからの復帰時にモデルを再読み込みせず、クラッシュを防ぎます。
+@st.cache_resource
 def init_model():
     return genai.GenerativeModel('gemini-pro-vision')
 
-# --- @st.cache_data: 同じ画像・プロンプトの解析結果をキャッシュする ---
+# --- @st.cache_data: 同じ画像・プロンプトの解析結果をデータとしてキャッシュする ---
 @st.cache_data
 def get_gemini_response(_model, _image_bytes, prompt):
     image = Image.open(io.BytesIO(_image_bytes))
@@ -49,7 +48,7 @@ st.set_page_config(page_title="Moji Scan", layout="centered")
 st.title("📝 Moji Scan")
 st.markdown("手書き文字の画像をアップロードすると、AIがテキストに書き起こします。")
 
-# Singletonで初期化されたモデルを取得
+# キャッシュされたモデルを取得
 model = init_model()
 
 uploaded_file = st.file_uploader(
