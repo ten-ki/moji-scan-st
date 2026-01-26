@@ -45,7 +45,7 @@ FINAL_JUDGEMENT_PROMPT = """あなたは優秀な編集者です。提示され�
 
 # --- Streamlit UIの構築 ---
 st.set_page_config(page_title="Moji Scan", layout="centered")
-st.title("📝 Moji Scan")
+st.title("Moji Scan")
 st.markdown("手書き文字の画像をアップロードすると、AIがテキストに書き起こします。")
 
 uploaded_file = st.file_uploader(
