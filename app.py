@@ -16,7 +16,7 @@ except Exception:
 # --- @st.cache_resource: AIモデルを一度だけ準備し、リソースとして記憶する ---
 @st.cache_resource
 def init_model():
-    return genai.GenerativeModel('gemini-2.5-flash-lite')
+    return genai.GenerativeModel('gemma-3-27b')
 
 # --- @st.cache_data: 解析結果をデータとしてキャッシュする ---
 @st.cache_data
