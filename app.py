@@ -3,6 +3,7 @@ import streamlit as st
 import io
 from PIL import Image
 import google.generativeai as genai
+import json
 
 # --- APIキーの設定 ---
 try:
@@ -18,7 +19,7 @@ except Exception:
 def init_model():
     return genai.GenerativeModel('gemma-3-27b-it')
 
-# --- @st.cache_data: 解析結果をデータとしてキャッシュ ---
+# --- @st.cache_data: 結果をデータとしてキャッシュ ---
 @st.cache_data
 def get_gemini_response(image_bytes, prompt):
     model = init_model() # ここでキャッシュされたモデルを呼び出す
@@ -68,7 +69,13 @@ if uploaded_file is not None:
         elif response1 == response2:
             final_result = response1
             st.success("解析が完了しました。（結果が一致したため高精度です）")
-            st.text_area("以下のテキストをコピーしてご利用ください:", final_result, height=250)
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.text_area("以下のテキストをコピーしてご利用ください:", final_result, height=250, label_visibility="collapsed")
+            with col2:
+                if st.button("📋 コピー", key="copy_button_1", use_container_width=True):
+                    st.write(final_result)
+                    st.success("コピーしました！")
         else:
             st.info("ステップ2/2: 結果の精度を高めるため、追加の検証を行っています...")
             final_prompt = FINAL_JUDGEMENT_PROMPT.format(text1=response1, text2=response2)
@@ -79,7 +86,13 @@ if uploaded_file is not None:
                 final_result = response1
             else:
                 st.success("検証が完了し、最終的な結果を生成しました。")
-            st.text_area("以下のテキストをコピーしてご利用ください:", final_result, height=250)
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.text_area("以下のテキストをコピーしてご利用ください:", final_result, height=250, label_visibility="collapsed")
+            with col2:
+                if st.button("📋 コピー", key="copy_button_2", use_container_width=True):
+                    st.write(final_result)
+                    st.success("コピーしました！")
 
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>Powered by Google Gemini API</div>", unsafe_allow_html=True)
