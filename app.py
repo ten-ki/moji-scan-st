@@ -1,4 +1,4 @@
-# app.py (最終確定・修正版: NameError 対策)
+# app.py 
 import streamlit as st
 import io
 from PIL import Image
@@ -13,12 +13,12 @@ except Exception:
     st.info("Streamlit Community CloudのSecretsにキーを設定してください。")
     st.stop()
 
-# --- @st.cache_resource: AIモデルを一度だけ準備し、リソースとして記憶する ---
+# --- @st.cache_resource: AIを一度だけ準備し、リソースとして記憶 ---
 @st.cache_resource
 def init_model():
     return genai.GenerativeModel('gemma-3-27b-it')
 
-# --- @st.cache_data: 解析結果をデータとしてキャッシュする ---
+# --- @st.cache_data: 解析結果をデータとしてキャッシュ ---
 @st.cache_data
 def get_gemini_response(image_bytes, prompt):
     model = init_model() # ここでキャッシュされたモデルを呼び出す
@@ -53,7 +53,7 @@ uploaded_file = st.file_uploader(
     type=["png", "jpg", "jpeg"]
 )
 
-# 【修正点】誤っていた 'if uploaded_file is not model:' を正しい条件に修正
+# 修正点
 if uploaded_file is not None:
     image_bytes = uploaded_file.getvalue()
     st.image(image_bytes, caption="アップロードされた画像", use_column_width=True)
