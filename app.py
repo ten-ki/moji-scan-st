@@ -73,7 +73,7 @@ if uploaded_file is not None:
             with col1:
                 st.text_area("以下のテキストをコピーしてご利用ください:", final_result, height=250, label_visibility="collapsed")
             with col2:
-                if st.button("コピー", key="copy_button_1", use_container_width=True):
+                if st.button("copy", key="copy_button_1", use_container_width=True):
                     st.write(final_result)
                     st.success("コピーしました！")
         else:
