@@ -9,14 +9,14 @@ try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=API_KEY)
 except Exception:
-    st.error("⚠️ エラー: Gemini APIキーが設定されていません。")
+    st.error("エラー: Gemini APIキーが設定されていません。")
     st.info("Streamlit Community CloudのSecretsにキーを設定してください。")
     st.stop()
 
 # --- @st.cache_resource: AIモデルを一度だけ準備し、リソースとして記憶する ---
 @st.cache_resource
 def init_model():
-    return genai.GenerativeModel('gemma-3-27b')
+    return genai.GenerativeModel('gemma-3-27b-it')
 
 # --- @st.cache_data: 解析結果をデータとしてキャッシュする ---
 @st.cache_data
