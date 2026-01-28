@@ -9,12 +9,18 @@ from difflib import SequenceMatcher
 # --- 編集距離を計算する関数 ---
 def calculate_similarity(text1, text2):
     """2つのテキスト間の類似度を計算（0-100%）"""
-    matcher = SequenceMatcher(None, text1, text2)
+    # 改行を除外
+    text1_clean = text1.replace('\n', '').replace('\r', '')
+    text2_clean = text2.replace('\n', '').replace('\r', '')
+    matcher = SequenceMatcher(None, text1_clean, text2_clean)
     similarity = matcher.ratio() * 100
     return similarity
 
 def calculate_edit_distance(text1, text2):
     """レーベンシュタイン距離を計算"""
+    # 改行を除外
+    text1 = text1.replace('\n', '').replace('\r', '')
+    text2 = text2.replace('\n', '').replace('\r', '')
     len1, len2 = len(text1), len(text2)
     dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
     
