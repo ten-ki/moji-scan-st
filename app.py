@@ -93,6 +93,8 @@ if uploaded_file is not None:
                 if st.button("📋 コピー", key="copy_button_2", use_container_width=True):
                     st.write(final_result)
                     st.success("コピーしました！")
+        
+        st.success("全ての解析が完了しました。")
 
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>Powered by Google Gemini API</div>", unsafe_allow_html=True)
