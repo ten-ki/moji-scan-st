@@ -4,6 +4,33 @@ import io
 from PIL import Image
 import google.generativeai as genai
 import json
+from difflib import SequenceMatcher
+
+# --- 編集距離を計算する関数 ---
+def calculate_similarity(text1, text2):
+    """2つのテキスト間の類似度を計算（0-100%）"""
+    matcher = SequenceMatcher(None, text1, text2)
+    similarity = matcher.ratio() * 100
+    return similarity
+
+def calculate_edit_distance(text1, text2):
+    """レーベンシュタイン距離を計算"""
+    len1, len2 = len(text1), len(text2)
+    dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
+    
+    for i in range(len1 + 1):
+        dp[i][0] = i
+    for j in range(len2 + 1):
+        dp[0][j] = j
+    
+    for i in range(1, len1 + 1):
+        for j in range(1, len2 + 1):
+            if text1[i-1] == text2[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+    
+    return dp[len1][len2]
 
 # --- APIキーの設定 ---
 try:
@@ -90,6 +117,24 @@ if uploaded_file is not None:
                 if st.button("copy", key="copy_button_1", use_container_width=True):
                     st.write(final_result)
                     st.success("コピーしました！")
+            
+            # 正しいテキスト入力と精度評価
+            st.markdown("---")
+            st.markdown("### 精度の評価")
+            correct_text = st.text_area("正しいテキストを入力してください：", height=100, key="correct_text_1")
+            
+            if correct_text:
+                st.markdown("#### 編集距離による精度評価")
+                edit_dist_single = calculate_edit_distance(response_single, correct_text)
+                edit_dist_final = calculate_edit_distance(final_result, correct_text)
+                similarity_single = calculate_similarity(response_single, correct_text)
+                similarity_final = calculate_similarity(final_result, correct_text)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Gemma単体", f"編集距離: {edit_dist_single}", f"類似度: {similarity_single:.1f}%")
+                with col2:
+                    st.metric("複合方式", f"編集距離: {edit_dist_final}", f"類似度: {similarity_final:.1f}%")
         else:
             st.info("ステップ3/3: 結果の精度を高めるため、追加の検証を行っています...")
             final_prompt = FINAL_JUDGEMENT_PROMPT.format(text1=response1, text2=response2)
@@ -118,6 +163,24 @@ if uploaded_file is not None:
                 if st.button("📋 コピー", key="copy_button_2", use_container_width=True):
                     st.write(final_result)
                     st.success("コピーしました！")
+            
+            # 正しいテキスト入力と精度評価
+            st.markdown("---")
+            st.markdown("### 精度の評価")
+            correct_text = st.text_area("正しいテキストを入力してください：", height=100, key="correct_text_2")
+            
+            if correct_text:
+                st.markdown("#### 編集距離による精度評価")
+                edit_dist_single = calculate_edit_distance(response_single, correct_text)
+                edit_dist_final = calculate_edit_distance(final_result, correct_text)
+                similarity_single = calculate_similarity(response_single, correct_text)
+                similarity_final = calculate_similarity(final_result, correct_text)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Gemma単体", f"編集距離: {edit_dist_single}", f"類似度: {similarity_single:.1f}%")
+                with col2:
+                    st.metric("複合方式", f"編集距離: {edit_dist_final}", f"類似度: {similarity_final:.1f}%")
         
         st.success("全ての解析が完了しました。")
 
