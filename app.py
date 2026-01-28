@@ -61,24 +61,24 @@ if uploaded_file is not None:
 
     with st.spinner("AIが手書き文字を解析中です..."):
         st.info("ステップ1/3: Gemma単体での書き起こしを実行中...")
-        response_baseline = get_gemini_response(image_bytes, PROMPT_BASE)
+        response_single = get_gemini_response(image_bytes, PROMPT_BASE)
         
         st.info("ステップ2/3: 異なる方法で文字を解析しています...")
         response1 = get_gemini_response(image_bytes, PROMPT_BASE)
         response2 = get_gemini_response(image_bytes, PROMPT_VARIANT)
 
-        if response1 is None or response2 is None or response_baseline is None:
+        if response1 is None or response2 is None or response_single is None:
             st.error("解析を中断しました。時間をおいて再度お試しください。")
         elif response1 == response2:
             final_result = response1
             st.success("解析が完了しました。（結果が一致したため高精度です）")
             
-            # Baseline結果との比較表示
+            # 複合方式との比較表示
             st.markdown("### 書き起こし結果の比較")
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader("Gemma単体")
-                st.text_area("", response_baseline, height=200, label_visibility="collapsed", key="baseline_area")
+                st.text_area("", response_single, height=200, label_visibility="collapsed", key="baseline_area")
             with col2:
                 st.subheader("最終結果（複合方式）")
                 st.text_area("", final_result, height=200, label_visibility="collapsed", key="final_area")
@@ -101,12 +101,12 @@ if uploaded_file is not None:
             else:
                 st.success("検証が完了し、最終的な結果を生成しました。")
             
-            # Baseline結果との比較表示
+            # 複合方式との比較表示
             st.markdown("### 書き起こし結果の比較")
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader("Gemma単体")
-                st.text_area("", response_baseline, height=200, label_visibility="collapsed", key="baseline_area_2")
+                st.text_area("", response_single, height=200, label_visibility="collapsed", key="baseline_area_2")
             with col2:
                 st.subheader("最終結果（複合方式）")
                 st.text_area("", final_result, height=200, label_visibility="collapsed", key="final_area_2")
